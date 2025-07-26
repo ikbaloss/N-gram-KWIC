@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>N-gram and KWIC Analysis Tool</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            color: #333;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #1a2a6c;
+        }
+        
+        h1 {
+            color: #1a2a6c;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #b21f1f;
+            font-size: 1.2rem;
+        }
+        
+        .citation-link {
+            color: #1a2a6c;
+            font-size: 1rem;
+            margin-top: 10px;
+            cursor: pointer;
+            text-decoration: underline;
+            display: inline-block;
+        }
+        
+        .citation-link:hover {
+            color: #b21f1f;
+        }
+        
+        .file-section {
+            background-color: #f0f4ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .file-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .file-input-container {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .column-select-container {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #1a2a6c;
+        }
+        
+        input[type="file"], select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #1a2a6c;
+            border-radius: 8px;
+            font-size: 1rem;
+            background-color: white;
+        }
+        
+        select {
+            cursor: pointer;
+        }
+        
+        .text-preview {
+            background-color: #e8f0fe;
+            border: 1px solid #1a2a6c;
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        
+        .text-preview h3 {
+            color: #1a2a6c;
+            margin-bottom: 10px;
+        }
+        
+        .analysis-controls {
+            background-color: #f0f4ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .generation-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .generation-buttons {
+            display: flex;
+            gap: 10px;
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .unigram-button, .bigram-button, .trigram-button, .fourgram-button {
+            flex: 1;
+        }
+        
+        .display-count-container {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .filter-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #1a2a6c;
+        }
+        
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        button {
+            background: linear-gradient(to right, #1a2a6c, #b21f1f);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        
+        .unigram-button {
+            background: linear-gradient(to right, #b21f1f, #1a2a6c);
+        }
+        
+        .trigram-button {
+            background: linear-gradient(to right, #b21f1f, #1a2a6c);
+        }
+        
+        .fourgram-button {
+            background: linear-gradient(to right, #1a2a6c, #3a56c4);
+        }
+        
+        .kwic-button {
+            background: linear-gradient(to right, #3a56c4, #1a2a6c);
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        input[type="number"], input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #1a2a6c;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        
+        .kwic-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #1a2a6c;
+        }
+        
+        .kwic-input-container {
+            flex: 2;
+            min-width: 300px;
+        }
+        
+        .kwic-window-container {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .kwic-button-container {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .analysis-table-container {
+            overflow-x: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+        }
+        
+        th {
+            background: linear-gradient(to right, #1a2a6c, #3a56c4);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            cursor: pointer;
+            position: sticky;
+            top: 0;
+        }
+        
+        th:hover {
+            background: linear-gradient(to right, #3a56c4, #1a2a6c);
+        }
+        
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f8f9ff;
+        }
+        
+        tr:hover {
+            background-color: #e8f0fe;
+        }
+        
+        .sort-indicator {
+            margin-left: 5px;
+        }
+        
+        .instructions {
+            background-color: #e8f4f8;
+            border-left: 5px solid #1a2a6c;
+            padding: 20px;
+            border-radius: 0 10px 10px 0;
+            margin-top: 30px;
+        }
+        
+        .instructions h2 {
+            color: #1a2a6c;
+            margin-bottom: 15px;
+        }
+        
+        .instructions ul {
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+        
+        .status {
+            text-align: center;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        
+        .status-processing {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .status-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .active-analysis {
+            font-weight: bold;
+            color: #1a2a6c;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 1.2rem;
+        }
+        
+        .kwic-highlight {
+            color: #1a2a6c;
+            font-weight: bold;
+            background-color: #e8f0fe;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        
+        .wildcard-example {
+            font-family: monospace;
+            background-color: #f0f4ff;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        
+        .clickable-ngram {
+            color: #1a2a6c;
+            cursor: pointer;
+            text-decoration: underline;
+            font-weight: 500;
+        }
+        
+        .clickable-ngram:hover {
+            background-color: #e8f0fe;
+            border-radius: 3px;
+        }
+        
+        /* Popup styles */
+        .popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .popup-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 90%;
+            position: relative;
+        }
+        
+        .popup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .popup-title {
+            color: #1a2a6c;
+            font-size: 1.5rem;
+            margin: 0;
+        }
+        
+        .close-popup {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .close-popup:hover {
+            color: #333;
+        }
+        
+        .citation-text {
+            font-family: 'Courier New', monospace;
+            background-color: #f8f9ff;
+            padding: 20px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        .copy-button {
+            background: linear-gradient(to right, #1a2a6c, #3a56c4);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            width: 100%;
+        }
+        
+        .copy-button:hover {
+            background: linear-gradient(to right, #3a56c4, #1a2a6c);
+        }
+        
+        .copy-success {
+            color: #28a745;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .file-controls, .generation-controls, .filter-controls, .kwic-controls {
+                flex-direction: column;
+            }
+            
+            .generation-buttons {
+                width: 100%;
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>N-gram and KWIC Analysis Tool</h1>
+            <p class="subtitle">Analyzes text files with hyphenated words and wildcard support</p>
+            <div class="citation-link" id="citationLink">Citing N-gram and KWIC Analysis Tool</div>
+        </header>
+        
+        <section class="file-section">
+            <h2>File Input</h2>
+            <div class="file-controls">
+                <div class="file-input-container">
+                    <label for="fileInput">Select a .txt or .csv file:</label>
+                    <input type="file" id="fileInput" accept=".txt,.csv">
+                </div>
+                
+                <div class="column-select-container">
+                    <label for="columnSelect">Select column (for CSV files):</label>
+                    <select id="columnSelect" disabled>
+                        <option value="">Select a column</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="textPreview" class="text-preview" style="display: none;">
+                <h3>Text Preview:</h3>
+                <div id="previewContent"></div>
+            </div>
+        </section>
+        
+        <section class="analysis-controls">
+            <h2>Analysis Generation</h2>
+            <div class="generation-controls">
+                <div class="generation-buttons">
+                    <button id="generateUnigrams" class="unigram-button">Generate Unigrams</button>
+                    <button id="generateBigrams" class="bigram-button">Generate Bigrams</button>
+                    <button id="generateTrigrams" class="trigram-button">Generate Trigrams</button>
+                    <button id="generateFourgrams" class="fourgram-button">Generate 4-grams</button>
+                </div>
+                
+                <div class="display-count-container">
+                    <label for="displayCount">Number of items to display:</label>
+                    <input type="number" id="displayCount" min="1" max="1000" value="50">
+                </div>
+            </div>
+            
+            <div id="activeAnalysis" class="active-analysis">Currently showing: Bigrams</div>
+            
+            <div class="filter-controls">
+                <div class="filter-group">
+                    <label for="minFrequency">Minimum Frequency:</label>
+                    <input type="number" id="minFrequency" min="1" value="1">
+                </div>
+                
+                <div class="filter-group">
+                    <label id="minScoreLabel" for="minScore">Minimum LogDice:</label>
+                    <input type="number" id="minScore" min="0" step="0.1" value="0">
+                </div>
+                
+                <div class="filter-group">
+                    <label>&nbsp;</label>
+                    <button id="refreshTable">Refresh Table</button>
+                </div>
+            </div>
+            
+            <div class="kwic-controls">
+                <div class="kwic-input-container">
+                    <label for="kwicInput">KWIC Search (use * for wildcards):</label>
+                    <input type="text" id="kwicInput" placeholder="Enter word(s) with optional wildcards (e.g., polit*, *ec*, eq*)">
+                </div>
+                
+                <div class="kwic-window-container">
+                    <label for="kwicWindow">Context Window Size:</label>
+                    <input type="number" id="kwicWindow" min="1" max="20" value="10">
+                </div>
+                
+                <div class="kwic-button-container">
+                    <label>&nbsp;</label>
+                    <button id="kwicButton" class="kwic-button">KWIC Analysis</button>
+                </div>
+            </div>
+        </section>
+        
+        <div id="statusMessage" class="status" style="display: none;"></div>
+        
+        <section class="analysis-table-container">
+            <table id="analysisTable">
+                <thead>
+                    <tr>
+                        <th id="sortNgram">N-gram <span class="sort-indicator">▼</span></th>
+                        <th id="sortFrequency">Frequency <span class="sort-indicator">▼</span></th>
+                        <th id="sortLogDice">logDice <span class="sort-indicator">▼</span></th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Analysis data will be inserted here -->
+                </tbody>
+            </table>
+        </section>
+        
+        <section class="instructions">
+            <h2>How to Use This Tool</h2>
+            <ul>
+                <li><strong>Select a file:</strong> Choose a .txt or .csv file from your computer</li>
+                <li><strong>For CSV files:</strong> Select the column you want to analyze</li>
+                <li><strong>Hyphenated words:</strong> Words like "well-known" are treated as single words</li>
+                <li><strong>Generate unigrams:</strong> Click the "Generate Unigrams" button to analyze word frequencies and TF-IDF</li>
+                <li><strong>Generate bigrams:</strong> Click the "Generate Bigrams" button to analyze word pairs</li>
+                <li><strong>Generate trigrams:</strong> Click the "Generate Trigrams" button to analyze word triplets</li>
+                <li><strong>Generate 4-grams:</strong> Click the "Generate 4-grams" button to analyze word quadruplets</li>
+                <li><strong>Click on any N-gram:</strong> Click on a bigram, trigram, or 4-gram to see it in context (KWIC)</li>
+                <li><strong>KWIC Analysis:</strong> Enter a word or phrase with wildcards (*) and click "KWIC Analysis"</li>
+                <li><strong>Wildcard examples:</strong> 
+                    <span class="wildcard-example">polit*</span> matches politics, political; 
+                    <span class="wildcard-example">*ec*</span> matches selected, projected; 
+                    <span class="wildcard-example">eq*</span> matches equal, equity
+                </li>
+                <li><strong>Adjust display:</strong> Set the number of items to show in the table</li>
+                <li><strong>Filter results:</strong> Set minimum frequency and score values, then click "Refresh"</li>
+                <li><strong>Sort </strong> Click column headers to sort by that column (click again to reverse order)</li>
+            </ul>
+        </section>
+        
+        <footer>
+            <p>N-gram and KWIC Analysis Tool &copy; 2023 | Calculates frequency and logDice scores for word sequences</p>
+        </footer>
+    </div>
+    
+    <!-- Citation Popup -->
+    <div class="popup-overlay" id="citationPopup">
+        <div class="popup-content">
+            <div class="popup-header">
+                <h3 class="popup-title">Citation Information</h3>
+                <button class="close-popup" id="closePopup">&times;</button>
+            </div>
+            <pre class="citation-text">@software{maulana2023n-gram,
+  author       = {Maulana, Ikbal},
+  title        = {{N-gram and KWIC Analysis Tool} (Version 0.03)},
+  year         = {2025},
+  type         = {Computer software},
+  address      = {Jakarta, Indonesia},
+  institution  = {National Research and Innovation Agency (BRIN)},
+}</pre>
+            <button class="copy-button" id="copyButton">Copy to Clipboard</button>
+            <div class="copy-success" id="copySuccess">Copied to clipboard!</div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentText = "";
+        let unigramData = [];
+        let bigramData = [];
+        let trigramData = [];
+        let fourgramData = [];
+        let filteredData = [];
+        let currentSort = { column: 'frequency', direction: 'desc' };
+        let currentAnalysis = 'bigrams'; // 'unigrams', 'bigrams', 'trigrams', 'fourgrams', or 'kwic'
+        let tokenizedWords = []; // Store tokenized words for KWIC
+        let tokenizedSentences = []; // Store sentences for multi-word KWIC
+        let paragraphs = []; // Store paragraphs for TF-IDF calculation
+        
+        // DOM elements
+        const fileInput = document.getElementById('fileInput');
+        const columnSelect = document.getElementById('columnSelect');
+        const textPreview = document.getElementById('textPreview');
+        const previewContent = document.getElementById('previewContent');
+        const generateUnigramsBtn = document.getElementById('generateUnigrams');
+        const generateBigramsBtn = document.getElementById('generateBigrams');
+        const generateTrigramsBtn = document.getElementById('generateTrigrams');
+        const generateFourgramsBtn = document.getElementById('generateFourgrams');
+        const displayCountInput = document.getElementById('displayCount');
+        const minFrequencyInput = document.getElementById('minFrequency');
+        const minScoreInput = document.getElementById('minScore');
+        const minScoreLabel = document.getElementById('minScoreLabel');
+        const refreshButton = document.getElementById('refreshTable');
+        const kwicInput = document.getElementById('kwicInput');
+        const kwicWindowInput = document.getElementById('kwicWindow');
+        const kwicButton = document.getElementById('kwicButton');
+        const tableBody = document.getElementById('tableBody');
+        const statusMessage = document.getElementById('statusMessage');
+        const sortNgram = document.getElementById('sortNgram');
+        const sortFrequency = document.getElementById('sortFrequency');
+        const sortLogDice = document.getElementById('sortLogDice');
+        const activeAnalysis = document.getElementById('activeAnalysis');
+        const citationLink = document.getElementById('citationLink');
+        const citationPopup = document.getElementById('citationPopup');
+        const closePopup = document.getElementById('closePopup');
+        const copyButton = document.getElementById('copyButton');
+        const copySuccess = document.getElementById('copySuccess');
+        
+        // Event listeners
+        fileInput.addEventListener('change', handleFileSelect);
+        generateUnigramsBtn.addEventListener('click', () => generateNgrams('unigrams'));
+        generateBigramsBtn.addEventListener('click', () => generateNgrams('bigrams'));
+        generateTrigramsBtn.addEventListener('click', () => generateNgrams('trigrams'));
+        generateFourgramsBtn.addEventListener('click', () => generateNgrams('fourgrams'));
+        refreshButton.addEventListener('click', refreshTable);
+        kwicButton.addEventListener('click', generateKWIC);
+        sortNgram.addEventListener('click', () => sortTable('ngram'));
+        sortFrequency.addEventListener('click', () => sortTable('frequency'));
+        sortLogDice.addEventListener('click', () => sortTable('logDice'));
+        citationLink.addEventListener('click', showCitationPopup);
+        closePopup.addEventListener('click', hideCitationPopup);
+        copyButton.addEventListener('click', copyCitation);
+        
+        // Close popup when clicking outside
+        window.addEventListener('click', (event) => {
+            if (event.target === citationPopup) {
+                hideCitationPopup();
+            }
+        });
+        
+        // Handle file selection
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const content = e.target.result;
+                
+                if (file.name.endsWith('.csv')) {
+                    processCSV(content);
+                } else {
+                    processText(content);
+                }
+            };
+            
+            reader.readAsText(file);
+        }
+        
+        // Process CSV file
+        function processCSV(content) {
+            const lines = content.split('\n');
+            if (lines.length < 1) return;
+            
+            // Parse header
+            const headers = lines[0].split(',').map(h => h.trim().replace(/^"(.*)"$/, '$1'));
+            
+            // Populate column selector
+            columnSelect.innerHTML = '<option value="">Select a column</option>';
+            headers.forEach((header, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = header;
+                columnSelect.appendChild(option);
+            });
+            
+            columnSelect.disabled = false;
+            
+            // Add event listener for column selection
+            columnSelect.onchange = function() {
+                if (this.value === "") return;
+                
+                const columnIndex = parseInt(this.value);
+                let text = "";
+                
+                // Extract text from selected column
+                for (let i = 1; i < lines.length; i++) {
+                    const columns = lines[i].split(',');
+                    if (columns.length > columnIndex) {
+                        const cell = columns[columnIndex].trim().replace(/^"(.*)"$/, '$1');
+                        if (cell) {
+                            text += cell + "\n";
+                        }
+                    }
+                }
+                
+                currentText = text;
+                tokenizeTextForKWIC(); // Tokenize for KWIC analysis
+                splitIntoParagraphs(); // Split into paragraphs for TF-IDF
+                showTextPreview(text);
+            };
+        }
+        
+        // Process text file
+        function processText(content) {
+            currentText = content;
+            columnSelect.disabled = true;
+            tokenizeTextForKWIC(); // Tokenize for KWIC analysis
+            splitIntoParagraphs(); // Split into paragraphs for TF-IDF
+            showTextPreview(content);
+        }
+        
+        // Split text into paragraphs
+        function splitIntoParagraphs() {
+            // Split by double newlines (paragraphs)
+            paragraphs = currentText.split(/\n\s*\n/).filter(p => p.trim().length > 0);
+        }
+        
+        // Show text preview
+        function showTextPreview(text) {
+            const previewLines = text.split('\n').slice(0, 10);
+            previewContent.textContent = previewLines.join('\n');
+            textPreview.style.display = 'block';
+        }
+        
+        // Tokenize text with hyphenated words support for KWIC
+        function tokenizeTextForKWIC() {
+            // Convert to lowercase and replace non-alphanumeric characters (except hyphens between letters)
+            // This regex matches:
+            // - Sequences of alphanumeric characters
+            // - Hyphenated words (alphanumeric-hyphen-alphanumeric)
+            const tokenRegex = /[a-z0-9]+(?:-[a-z0-9]+)*/g;
+            const matches = currentText.toLowerCase().match(tokenRegex);
+            tokenizedWords = matches || [];
+            
+            // Also split text into sentences for multi-word KWIC
+            tokenizedSentences = currentText.toLowerCase()
+                .split(/[.!?]+/)
+                .map(sentence => sentence.trim())
+                .filter(sentence => sentence.length > 0);
+        }
+        
+        // Tokenize text with hyphenated words support for N-grams
+        function tokenizeText(text) {
+            // Convert to lowercase and replace non-alphanumeric characters (except hyphens between letters)
+            const tokenRegex = /[a-z0-9]+(?:-[a-z0-9]+)*/g;
+            const matches = text.toLowerCase().match(tokenRegex);
+            return matches || [];
+        }
+        
+        // Generate unigrams from text with paragraph-based TF-IDF
+        function generateUnigrams() {
+            showStatus("Processing text and generating unigrams...", "processing");
+            
+            // Tokenize text into words (with hyphenated words support)
+            const words = tokenizeText(currentText);
+            
+            // Count word frequencies in the entire document
+            const wordCount = new Map();
+            for (const word of words) {
+                wordCount.set(word, (wordCount.get(word) || 0) + 1);
+            }
+            
+            // Calculate TF-IDF scores using paragraphs as documents
+            const totalWords = words.length;
+            const docCount = paragraphs.length; // Number of paragraphs
+            const docsWithWord = new Map(); // Count of paragraphs containing each word
+            
+            // Initialize docsWithWord with all words
+            for (const word of wordCount.keys()) {
+                docsWithWord.set(word, 0);
+            }
+            
+            // Count how many paragraphs contain each word
+            for (const paragraph of paragraphs) {
+                const paraWords = new Set(tokenizeText(paragraph));
+                for (const word of paraWords) {
+                    if (docsWithWord.has(word)) {
+                        docsWithWord.set(word, docsWithWord.get(word) + 1);
+                    }
+                }
+            }
+            
+            // Calculate TF-IDF for each word
+            unigramData = [];
+            for (const [word, frequency] of wordCount.entries()) {
+                // TF = frequency of word in document / total words in document
+                const tf = frequency / totalWords;
+                
+                // IDF = log(total documents / documents containing word)
+                const idf = Math.log(docCount / docsWithWord.get(word));
+                
+                // TF-IDF = TF * IDF
+                const tfidf = tf * idf;
+                
+                unigramData.push({
+                    word: word,
+                    frequency: frequency,
+                    tfidf: parseFloat(tfidf.toFixed(4))
+                });
+            }
+            
+            // Set default min TF-IDF value
+            if (unigramData.length > 0) {
+                const minTfidf = Math.min(...unigramData.map(u => u.tfidf));
+                minScoreInput.value = minTfidf.toFixed(4);
+                minScoreInput.min = minTfidf.toFixed(4);
+            }
+            
+            // Sort by TF-IDF in descending order by default for unigrams
+            currentSort = { column: 'tfidf', direction: 'desc' };
+            sortUnigramData();
+            
+            showStatus(`Generated ${unigramData.length} unigrams successfully!`, "success");
+        }
+        
+        // Generate bigrams from text
+        function generateBigrams() {
+            showStatus("Processing text and generating bigrams...", "processing");
+            
+            // Tokenize text into words (with hyphenated words support)
+            const words = tokenizeText(currentText);
+            
+            // Generate bigrams
+            const bigramMap = new Map();
+            const wordCount = new Map();
+            
+            // Count word occurrences
+            for (const word of words) {
+                wordCount.set(word, (wordCount.get(word) || 0) + 1);
+            }
+            
+            // Generate bigrams and calculate frequencies
+            for (let i = 0; i < words.length - 1; i++) {
+                const bigram = words[i] + " " + words[i + 1];
+                bigramMap.set(bigram, (bigramMap.get(bigram) || 0) + 1);
+            }
+            
+            // Calculate logDice scores
+            bigramData = [];
+            for (const [bigram, frequency] of bigramMap.entries()) {
+                const [word1, word2] = bigram.split(" ");
+                const count1 = wordCount.get(word1) || 0;
+                const count2 = wordCount.get(word2) || 0;
+                
+                // Calculate logDice: 14 + log2(2*frequency / (count1 + count2))
+                const logDice = 14 + Math.log2((2 * frequency) / (count1 + count2));
+                
+                bigramData.push({
+                    ngram: bigram,
+                    frequency: frequency,
+                    logDice: parseFloat(logDice.toFixed(2))
+                });
+            }
+            
+            // Set default min values
+            if (bigramData.length > 0) {
+                const minFreq = Math.min(...bigramData.map(b => b.frequency));
+                const minLog = Math.min(...bigramData.map(b => b.logDice));
+                
+                minFrequencyInput.value = minFreq;
+                minFrequencyInput.min = minFreq;
+                minScoreInput.value = minLog.toFixed(1);
+                minScoreInput.min = minLog.toFixed(1);
+            }
+            
+            showStatus(`Generated ${bigramData.length} bigrams successfully!`, "success");
+        }
+        
+        // Generate trigrams from text
+        function generateTrigrams() {
+            showStatus("Processing text and generating trigrams...", "processing");
+            
+            // If bigrams haven't been generated yet, generate them first
+            if (bigramData.length === 0) {
+                generateBigrams();
+            }
+            
+            // Create a map of bigrams for quick lookup
+            const bigramMap = new Map();
+            bigramData.forEach(bigram => {
+                bigramMap.set(bigram.ngram, bigram.logDice);
+            });
+            
+            // Tokenize text into words (with hyphenated words support)
+            const words = tokenizeText(currentText);
+            
+            // Generate trigrams
+            const trigramMap = new Map();
+            
+            // Generate trigrams and calculate frequencies
+            for (let i = 0; i < words.length - 2; i++) {
+                const trigram = words[i] + " " + words[i + 1] + " " + words[i + 2];
+                trigramMap.set(trigram, (trigramMap.get(trigram) || 0) + 1);
+            }
+            
+            // Calculate logDice scores for trigrams
+            trigramData = [];
+            for (const [trigram, frequency] of trigramMap.entries()) {
+                const words = trigram.split(" ");
+                const bigram1 = words[0] + " " + words[1];
+                const bigram2 = words[1] + " " + words[2];
+                
+                const logDice1 = bigramMap.get(bigram1) || 0;
+                const logDice2 = bigramMap.get(bigram2) || 0;
+                
+                // Take the minimum of the two bigram logDice scores
+                const logDice = Math.min(logDice1, logDice2);
+                
+                trigramData.push({
+                    ngram: trigram,
+                    frequency: frequency,
+                    logDice: parseFloat(logDice.toFixed(2))
+                });
+            }
+            
+            // Set default min values
+            if (trigramData.length > 0) {
+                const minFreq = Math.min(...trigramData.map(t => t.frequency));
+                const minLog = Math.min(...trigramData.map(t => t.logDice));
+                
+                minFrequencyInput.value = minFreq;
+                minFrequencyInput.min = minFreq;
+                minScoreInput.value = minLog.toFixed(1);
+                minScoreInput.min = minLog.toFixed(1);
+            }
+            
+            showStatus(`Generated ${trigramData.length} trigrams successfully!`, "success");
+        }
+        
+        // Generate 4-grams from text
+        function generateFourgrams() {
+            showStatus("Processing text and generating 4-grams...", "processing");
+            
+            // If trigrams haven't been generated yet, generate them first
+            if (trigramData.length === 0) {
+                generateTrigrams();
+            }
+            
+            // Create a map of trigrams for quick lookup
+            const trigramMap = new Map();
+            trigramData.forEach(trigram => {
+                trigramMap.set(trigram.ngram, trigram.logDice);
+            });
+            
+            // Tokenize text into words (with hyphenated words support)
+            const words = tokenizeText(currentText);
+            
+            // Generate 4-grams
+            const fourgramMap = new Map();
+            
+            // Generate 4-grams and calculate frequencies
+            for (let i = 0; i < words.length - 3; i++) {
+                const fourgram = words[i] + " " + words[i + 1] + " " + words[i + 2] + " " + words[i + 3];
+                fourgramMap.set(fourgram, (fourgramMap.get(fourgram) || 0) + 1);
+            }
+            
+            // Calculate logDice scores for 4-grams
+            fourgramData = [];
+            for (const [fourgram, frequency] of fourgramMap.entries()) {
+                const words = fourgram.split(" ");
+                const trigram1 = words[0] + " " + words[1] + " " + words[2];
+                const trigram2 = words[1] + " " + words[2] + " " + words[3];
+                
+                const logDice1 = trigramMap.get(trigram1) || 0;
+                const logDice2 = trigramMap.get(trigram2) || 0;
+                
+                // Take the minimum of the two trigram logDice scores
+                const logDice = Math.min(logDice1, logDice2);
+                
+                fourgramData.push({
+                    ngram: fourgram,
+                    frequency: frequency,
+                    logDice: parseFloat(logDice.toFixed(2))
+                });
+            }
+            
+            // Set default min values
+            if (fourgramData.length > 0) {
+                const minFreq = Math.min(...fourgramData.map(f => f.frequency));
+                const minLog = Math.min(...fourgramData.map(f => f.logDice));
+                
+                minFrequencyInput.value = minFreq;
+                minFrequencyInput.min = minFreq;
+                minScoreInput.value = minLog.toFixed(1);
+                minScoreInput.min = minLog.toFixed(1);
+            }
+            
+            showStatus(`Generated ${fourgramData.length} 4-grams successfully!`, "success");
+        }
+        
+        // Generate n-grams (unigrams, bigrams, trigrams, or 4-grams)
+        function generateNgrams(type) {
+            if (!currentText) {
+                showStatus("Please select a file first", "processing");
+                return;
+            }
+            
+            currentAnalysis = type;
+            activeAnalysis.textContent = `Currently showing: ${type.charAt(0).toUpperCase() + type.slice(1)}`;
+            
+            // Update the label based on analysis type
+            if (type === 'unigrams') {
+                minScoreLabel.textContent = 'Minimum TF-IDF:';
+            } else {
+                minScoreLabel.textContent = 'Minimum LogDice:';
+            }
+            
+            if (type === 'unigrams') {
+                generateUnigrams();
+                refreshTable();
+            } else if (type === 'bigrams') {
+                generateBigrams();
+                refreshTable();
+            } else if (type === 'trigrams') {
+                generateTrigrams();
+                refreshTable();
+            } else {
+                generateFourgrams();
+                refreshTable();
+            }
+        }
+        
+        // Convert wildcard pattern to regex
+        function wildcardToRegex(pattern) {
+            // Escape special regex characters except *
+            const escapedPattern = pattern.replace(/([.+?^${}()|\[\]\/\\])/g, '\\$1');
+            // Replace * with .* for regex matching
+            return new RegExp('^' + escapedPattern.replace(/\*/g, '.*') + '$', 'i');
+        }
+        
+        // Find matching words in unigram array based on wildcard pattern
+        function findMatchingWords(pattern) {
+            // If no unigram data, return empty array
+            if (unigramData.length === 0) {
+                return [];
+            }
+            
+            // Convert pattern to regex
+            const regex = wildcardToRegex(pattern);
+            
+            // Find matching words
+            const matches = [];
+            for (const unigram of unigramData) {
+                if (regex.test(unigram.word)) {
+                    matches.push(unigram.word);
+                }
+            }
+            
+            return matches;
+        }
+        
+        // Generate KWIC analysis for multi-word phrases with wildcard support
+        function generateKWIC() {
+            if (!currentText) {
+                showStatus("Please select a file first", "processing");
+                return;
+            }
+            
+            const searchTerm = kwicInput.value.trim();
+            if (!searchTerm) {
+                showStatus("Please enter a search term", "processing");
+                return;
+            }
+            
+            const windowSize = parseInt(kwicWindowInput.value) || 10;
+            showStatus("Generating KWIC analysis...", "processing");
+            
+            // Check if the search term contains wildcards
+            let searchPhrases = [];
+            if (searchTerm.includes('*')) {
+                // Split by spaces to handle multi-word phrases
+                const terms = searchTerm.split(/\s+/);
+                
+                // Process each term
+                const processedTerms = [];
+                for (const term of terms) {
+                    if (term.includes('*')) {
+                        // Find matching words in unigram array
+                        const matches = findMatchingWords(term);
+                        if (matches.length > 0) {
+                            processedTerms.push(matches);
+                        } else {
+                            // If no matches, add the term as is
+                            processedTerms.push([term]);
+                        }
+                    } else {
+                        // Add literal word
+                        processedTerms.push([term]);
+                    }
+                }
+                
+                // Generate all combinations of phrases
+                searchPhrases = generateCombinations(processedTerms);
+                
+                // If no matches found, show message
+                if (searchPhrases.length === 0) {
+                    showStatus("No matching phrases found for wildcard pattern", "processing");
+                    return;
+                }
+            } else {
+                // No wildcards, treat as a single phrase
+                searchPhrases = [searchTerm];
+            }
+            
+            // Generate KWIC entries
+            const kwicData = [];
+            
+            // For each search phrase, search through sentences
+            for (const phrase of searchPhrases) {
+                // Tokenize the phrase into words
+                const phraseWords = tokenizeText(phrase);
+                
+                // Convert each phrase word to a regex pattern
+                const phraseRegexes = phraseWords.map(word => 
+                    new RegExp('^' + word.replace(/([.+?^${}()|\[\]\/\\])/g, '\\$1') + '$', 'i')
+                );
+                
+                // Search for the phrase in sentences
+                for (const sentence of tokenizedSentences) {
+                    const sentenceTokens = tokenizeText(sentence);
+                    
+                    // Search for the phrase in the sentence
+                    for (let i = 0; i <= sentenceTokens.length - phraseWords.length; i++) {
+                        let match = true;
+                        
+                        // Check if the phrase matches at position i
+                        for (let j = 0; j < phraseWords.length; j++) {
+                            if (!phraseRegexes[j].test(sentenceTokens[i + j])) {
+                                match = false;
+                                break;
+                            }
+                        }
+                        
+                        if (match) {
+                            // Found a match, extract context
+                            const leftContext = sentenceTokens.slice(Math.max(0, i - windowSize), i);
+                            const keyword = sentenceTokens.slice(i, i + phraseWords.length);
+                            const rightContext = sentenceTokens.slice(i + phraseWords.length, i + phraseWords.length + windowSize);
+                            
+                            // Pad with empty strings if needed
+                            while (leftContext.length < windowSize) leftContext.unshift('');
+                            while (rightContext.length < windowSize) rightContext.push('');
+                            
+                            kwicData.push({
+                                leftContext: leftContext,
+                                keyword: keyword,
+                                rightContext: rightContext
+                            });
+                        }
+                    }
+                }
+            }
+            
+            // Sort by keyword, then by right context
+            kwicData.sort((a, b) => {
+                const keywordA = a.keyword.join(' ');
+                const keywordB = b.keyword.join(' ');
+                
+                if (keywordA !== keywordB) {
+                    return keywordA.localeCompare(keywordB);
+                }
+                return a.rightContext.join(' ').localeCompare(b.rightContext.join(' '));
+            });
+            
+            // Display KWIC results
+            displayKWIC(kwicData);
+            
+            currentAnalysis = 'kwic';
+            activeAnalysis.textContent = `Currently showing: KWIC for "${searchTerm}"`;
+            showStatus(`Found ${kwicData.length} matches for "${searchTerm}"`, "success");
+        }
+        
+        // Generate all combinations of phrases from arrays of word options
+        function generateCombinations(terms) {
+            if (terms.length === 0) return [];
+            if (terms.length === 1) return terms[0];
+            
+            const result = [];
+            const first = terms[0];
+            const rest = generateCombinations(terms.slice(1));
+            
+            for (const word of first) {
+                for (const phrase of rest) {
+                    result.push(word + " " + phrase);
+                }
+            }
+            
+            return result;
+        }
+        
+        // Display KWIC results
+        function displayKWIC(kwicData) {
+            tableBody.innerHTML = '';
+            
+            if (kwicData.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = '<td colspan="3" style="text-align: center;">No matches found</td>';
+                tableBody.appendChild(row);
+                return;
+            }
+            
+            // Create table header for KWIC
+            document.querySelector('thead tr').innerHTML = `
+                <th>Left Context</th>
+                <th>Keyword</th>
+                <th>Right Context</th>
+            `;
+            
+            // Display KWIC entries
+            kwicData.forEach(entry => {
+                const row = document.createElement('tr');
+                
+                // Left context (reverse order for display)
+                const leftContext = entry.leftContext.slice().reverse().join(' ');
+                
+                // Keyword (join with spaces)
+                const keyword = entry.keyword.join(' ');
+                
+                // Right context
+                const rightContext = entry.rightContext.join(' ');
+                
+                row.innerHTML = `
+                    <td style="text-align: right;">${leftContext}</td>
+                    <td style="text-align: center;"><span class="kwic-highlight">${keyword}</span></td>
+                    <td>${rightContext}</td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Refresh table with current filters
+        function refreshTable() {
+            let dataToFilter = [];
+            
+            if (currentAnalysis === 'unigrams') {
+                dataToFilter = unigramData;
+            } else if (currentAnalysis === 'bigrams') {
+                dataToFilter = bigramData;
+            } else if (currentAnalysis === 'trigrams') {
+                dataToFilter = trigramData;
+            } else if (currentAnalysis === 'fourgrams') {
+                dataToFilter = fourgramData;
+            } else {
+                // For KWIC, we don't have filtering
+                return;
+            }
+            
+            if (dataToFilter.length === 0) {
+                showStatus(`Please generate ${currentAnalysis} first`, "processing");
+                return;
+            }
+            
+            const minFreq = parseInt(minFrequencyInput.value) || 1;
+            const minScore = parseFloat(minScoreInput.value) || 0;
+            
+            // Filter data based on analysis type
+            if (currentAnalysis === 'unigrams') {
+                filteredData = dataToFilter.filter(item => 
+                    item.frequency >= minFreq && item.tfidf >= minScore
+                );
+            } else {
+                filteredData = dataToFilter.filter(item => 
+                    item.frequency >= minFreq && item.logDice >= minScore
+                );
+            }
+            
+            // Sort based on current sort settings
+            if (currentAnalysis === 'unigrams') {
+                sortUnigramData();
+                displayUnigramTable();
+            } else {
+                sortNgramData();
+                displayNgramTable();
+            }
+        }
+        
+        // Sort table by column
+        function sortTable(column) {
+            // Update sort direction
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.column = column;
+                currentSort.direction = 'desc';
+            }
+            
+            // Update sort indicators
+            document.querySelectorAll('.sort-indicator').forEach(el => {
+                el.textContent = '▼';
+            });
+            
+            const indicator = document.querySelector(`#sort${capitalizeFirstLetter(column)} .sort-indicator`);
+            indicator.textContent = currentSort.direction === 'asc' ? '▲' : '▼';
+            
+            // Apply sorting
+            if (currentAnalysis === 'unigrams') {
+                sortUnigramData();
+                displayUnigramTable();
+            } else {
+                sortNgramData();
+                displayNgramTable();
+            }
+        }
+        
+        // Sort unigram data based on current sort settings
+        function sortUnigramData() {
+            // Sort the filtered data
+            filteredData.sort((a, b) => {
+                let comparison = 0;
+                
+                switch (currentSort.column) {
+                    case 'word':
+                        comparison = a.word.localeCompare(b.word);
+                        break;
+                    case 'frequency':
+                        comparison = a.frequency - b.frequency;
+                        break;
+                    case 'tfidf':
+                        comparison = a.tfidf - b.tfidf;
+                        break;
+                }
+                
+                return currentSort.direction === 'desc' ? -comparison : comparison;
+            });
+        }
+        
+        // Sort n-gram data based on current sort settings
+        function sortNgramData() {
+            // Sort the filtered data
+            filteredData.sort((a, b) => {
+                let comparison = 0;
+                
+                switch (currentSort.column) {
+                    case 'ngram':
+                        comparison = a.ngram.localeCompare(b.ngram);
+                        break;
+                    case 'frequency':
+                        comparison = a.frequency - b.frequency;
+                        break;
+                    case 'logDice':
+                        comparison = a.logDice - b.logDice;
+                        break;
+                }
+                
+                return currentSort.direction === 'desc' ? -comparison : comparison;
+            });
+        }
+        
+        // Display unigram data in table
+        function displayUnigramTable() {
+            // Set up unigram table header
+            document.querySelector('thead tr').innerHTML = `
+                <th id="sortWord">Word <span class="sort-indicator">▼</span></th>
+                <th id="sortFrequency">Frequency <span class="sort-indicator">▼</span></th>
+                <th id="sortTfidf">TF-IDF <span class="sort-indicator">▼</span></th>
+            `;
+            
+            // Re-attach event listeners to header
+            document.getElementById('sortWord').addEventListener('click', () => sortTable('word'));
+            document.getElementById('sortFrequency').addEventListener('click', () => sortTable('frequency'));
+            document.getElementById('sortTfidf').addEventListener('click', () => sortTable('tfidf'));
+            
+            const count = parseInt(displayCountInput.value) || 50;
+            const displayData = filteredData.slice(0, count);
+            
+            tableBody.innerHTML = '';
+            
+            if (displayData.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = '<td colspan="3" style="text-align: center;">No data matches the current filters</td>';
+                tableBody.appendChild(row);
+                return;
+            }
+            
+            displayData.forEach(item => {
+                const row = document.createElement('tr');
+                
+                const wordCell = document.createElement('td');
+                wordCell.textContent = item.word;
+                
+                const freqCell = document.createElement('td');
+                freqCell.textContent = item.frequency;
+                
+                const tfidfCell = document.createElement('td');
+                tfidfCell.textContent = item.tfidf;
+                
+                row.appendChild(wordCell);
+                row.appendChild(freqCell);
+                row.appendChild(tfidfCell);
+                
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Display n-gram data in table with clickable n-grams
+        function displayNgramTable() {
+            // Restore n-gram table header
+            document.querySelector('thead tr').innerHTML = `
+                <th id="sortNgram">N-gram <span class="sort-indicator">▼</span></th>
+                <th id="sortFrequency">Frequency <span class="sort-indicator">▼</span></th>
+                <th id="sortLogDice">logDice <span class="sort-indicator">▼</span></th>
+            `;
+            
+            // Re-attach event listeners to header
+            document.getElementById('sortNgram').addEventListener('click', () => sortTable('ngram'));
+            document.getElementById('sortFrequency').addEventListener('click', () => sortTable('frequency'));
+            document.getElementById('sortLogDice').addEventListener('click', () => sortTable('logDice'));
+            
+            const count = parseInt(displayCountInput.value) || 50;
+            const displayData = filteredData.slice(0, count);
+            
+            tableBody.innerHTML = '';
+            
+            if (displayData.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = '<td colspan="3" style="text-align: center;">No data matches the current filters</td>';
+                tableBody.appendChild(row);
+                return;
+            }
+            
+            displayData.forEach(item => {
+                const row = document.createElement('tr');
+                
+                // Create clickable n-gram cell
+                const ngramCell = document.createElement('td');
+                ngramCell.className = 'clickable-ngram';
+                ngramCell.textContent = item.ngram;
+                ngramCell.addEventListener('click', () => {
+                    kwicInput.value = item.ngram;
+                    generateKWIC();
+                });
+                
+                const freqCell = document.createElement('td');
+                freqCell.textContent = item.frequency;
+                
+                const logDiceCell = document.createElement('td');
+                logDiceCell.textContent = item.logDice;
+                
+                row.appendChild(ngramCell);
+                row.appendChild(freqCell);
+                row.appendChild(logDiceCell);
+                
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Show status message
+        function showStatus(message, type) {
+            statusMessage.textContent = message;
+            statusMessage.className = "status status-" + type;
+            statusMessage.style.display = "block";
+            
+            // Auto-hide success messages after 3 seconds
+            if (type === "success") {
+                setTimeout(() => {
+                    statusMessage.style.display = "none";
+                }, 3000);
+            }
+        }
+        
+        // Helper function to capitalize first letter
+        function capitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+        
+        // Show citation popup
+        function showCitationPopup() {
+            citationPopup.style.display = 'flex';
+        }
+        
+        // Hide citation popup
+        function hideCitationPopup() {
+            citationPopup.style.display = 'none';
+            copySuccess.style.display = 'none';
+        }
+        
+        // Copy citation to clipboard
+        function copyCitation() {
+            const citationText = `@software{maulana2023n-gram,
+  author       = {Maulana, Ikbal},
+  title        = {{N-gram and KWIC Analysis Tool} (Version 0.03)},
+  year         = {2025},
+  type         = {Computer software},
+  address      = {Jakarta, Indonesia},
+  institution  = {National Research and Innovation Agency (BRIN)},
+}`;
+            
+            navigator.clipboard.writeText(citationText).then(() => {
+                copySuccess.style.display = 'block';
+                setTimeout(() => {
+                    copySuccess.style.display = 'none';
+                }, 2000);
+            });
+        }
+        
+        // Initialize with empty text
+        window.addEventListener('load', () => {
+            currentText = "";
+            showTextPreview(currentText);
+        });
+    </script>
+</body>
+</html>
